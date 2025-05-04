@@ -6,7 +6,7 @@ namespace NoDieNPC
     [ApiVersion(2, 1)]
     public class NoDieNPC : TerrariaPlugin {
         public override string Name => "NoDieNPC";
-        public override Version Version => new Version(1, 0, 1);
+        public override Version Version => new (1, 0, 0);
         public override string Author => "iBelarus";
         public override string Description => "The plugin makes towny NPCs immortal.";
 

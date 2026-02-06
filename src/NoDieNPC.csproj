@@ -1,14 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TShock" Version="5.2.3" />
+    <None Remove="C:\Users\VALERA\.nuget\packages\tshockapi.tz\5.9.9-tz.3\contentFiles\any\net9.0\HttpServer.dll" />
+    <None Remove="C:\Users\VALERA\.nuget\packages\tshockapi.tz\5.9.9-tz.4\contentFiles\any\net9.0\HttpServer.dll" />
+    <None Remove="C:\Users\VALERA\.nuget\packages\tshock\5.2.3\contentFiles\any\net6.0\HttpServer.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TShockAPI.TZ" Version="5.9.9-tz.4" />
   </ItemGroup>
 
 </Project>

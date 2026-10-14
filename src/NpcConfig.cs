@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Terraria.ID;
 
 namespace NoDieNPC;
 
@@ -9,10 +8,6 @@ public sealed class NpcConfig
 
     // Preserve the original plugin's "protected by default" behavior.
     public bool GodMode { get; set; } = true;
-
-    // Guide / Clothier deaths are used by vanilla progression rituals.
-    public List<int> GodModeExemptNpcTypes { get; set; } =
-        new() { NPCID.Guide, NPCID.Clothier };
 
     public static NpcConfig LoadOrDefault(string path)
     {
@@ -36,8 +31,8 @@ public sealed class NpcConfig
             }
 
             NpcConfig? loaded = JsonConvert.DeserializeObject<NpcConfig>(File.ReadAllText(path));
-            if (loaded == null || loaded.GodModeExemptNpcTypes == null)
-                throw new JsonException("Config root or GodModeExemptNpcTypes must not be null.");
+            if (loaded == null)
+                throw new JsonException("Config root must not be null.");
 
             config = loaded;
             return true;

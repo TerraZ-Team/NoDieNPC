@@ -41,9 +41,9 @@ public sealed class NoDieNPC : TerrariaPlugin
         ReconcileActiveNpcs();
     }
 
-    private bool ShouldProtect(NPC npc) =>
-        _config.GodMode && npc.townNPC &&
-        !_config.GodModeExemptNpcTypes.Contains(npc.type);
+    // GodMode applies to every town NPC, including the Guide and Clothier.
+    // To allow vanilla NPC deaths/boss summoning, disable GodMode first.
+    private bool ShouldProtect(NPC npc) => _config.GodMode && npc.townNPC;
 
     private void OnNpcStrike(NpcStrikeEventArgs args)
     {
@@ -115,17 +115,26 @@ public sealed class NoDieNPC : TerrariaPlugin
         {
             _protectedNpcs[slot] = new ProtectionSnapshot(
                 npc, npc.type, npc.lavaImmune, npc.immortal,
-                npc.knockBackResist, npc.takenDamageMultiplier);
+                npc.dontTakeDamage, npc.knockBackResist, npc.takenDamageMultiplier);
             npc.netUpdate = true;
         }
 
-        npc.lavaImmune = true;
+        // Prevent weapon/projectile damage through NPC damage flags, not only
+        // NpcStrike (which covers a subset of the server's strike paths).
+        npc.dontTakeDamage = true;
         npc.immortal = true;
+        npc.lavaImmune = true;
         npc.knockBackResist = 0f;
         npc.takenDamageMultiplier = 0f;
 
-        // Covers non-player/environmental damage without a global tick loop.
-        if (npc.life < npc.lifeMax)
+        // Drowning in water or honey has a separate NPC breath counter.
+        // Reset it on each NPC AI update, without any global GameUpdate scan.
+        npc.breath = 200;
+        npc.breathCounter = 0;
+
+        // Heal existing damage on enable; protection does not rely on
+        // reviving NPCs after a lethal hit.
+        if (npc.life != npc.lifeMax)
         {
             npc.life = npc.lifeMax;
             npc.netUpdate = true;
@@ -143,6 +152,7 @@ public sealed class NoDieNPC : TerrariaPlugin
 
         npc.lavaImmune = saved.LavaImmune;
         npc.immortal = saved.Immortal;
+        npc.dontTakeDamage = saved.DontTakeDamage;
         npc.knockBackResist = saved.KnockBackResist;
         npc.takenDamageMultiplier = saved.TakenDamageMultiplier;
         npc.netUpdate = true;
@@ -291,7 +301,7 @@ public sealed class NoDieNPC : TerrariaPlugin
                 break;
 
             case "status":
-                args.Player.SendInfoMessage($"NPC Freeze={_config.Freeze}, GodMode={_config.GodMode}; excluded NPC IDs: {string.Join(", ", _config.GodModeExemptNpcTypes)}");
+                args.Player.SendInfoMessage($"NPC Freeze={_config.Freeze}, GodMode={_config.GodMode} (all town NPCs)");
                 NpcSummoning.Status(args);
                 break;
 
@@ -321,6 +331,6 @@ public sealed class NoDieNPC : TerrariaPlugin
     }
 
     private sealed record ProtectionSnapshot(
-        NPC Npc, int Type, bool LavaImmune, bool Immortal,
+        NPC Npc, int Type, bool LavaImmune, bool Immortal, bool DontTakeDamage,
         float KnockBackResist, float TakenDamageMultiplier);
 }

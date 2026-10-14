@@ -24,15 +24,14 @@ Generated at `tshock/NoDieNPC.json`:
 ```json
 {
   "Freeze": false,
-  "GodMode": true,
-  "GodModeExemptNpcTypes": [22, 54]
+  "GodMode": true
 }
 ```
 
-- **GodMode** defaults to **true**, retaining the old TerraZ-Team behavior.
-- NPC **22 (Guide)** and **54 (Clothier)** are excluded by default because their deaths are needed for vanilla summon rituals. Remove IDs from the exemption list if you intentionally want to protect them.
+- **GodMode** defaults to **true** and protects **every active town NPC** against player attacks (including Flymeal and Rotten Eggs), environmental damage, lava, and drowning in water or honey. It combines NPC-level `dontTakeDamage`, `immortal` and `lavaImmune` flags with `NpcStrike` cancellation and a full breath meter maintained by `NpcAIUpdate`. There is no per-damage-type configuration.
+- **Important:** Guide and Clothier are **also protected** while GodMode is active. To perform vanilla voodoo boss summons, temporarily run `/npc godmode` to turn protection off, then turn it back on afterward.
 - **Freeze** cancels town NPC AI in `NpcAIUpdate` and stops velocity without modifying `aiStyle`. Shimmer-transparent NPCs are left alone to finish their transformation.
-- **GodMode** uses `NpcStrike`, `NpcSpawn`, `NpcAIUpdate` and initial world reconciliation. Original immunity/damage settings are restored when it is disabled and when the plugin unloads.
+- NPC protection uses `NpcStrike`, `NpcSpawn`, `NpcAIUpdate` and initial world reconciliation. Original damage flags are restored on disable or plugin unload. A previous config field `GodModeExemptNpcTypes` is no longer used and can be deleted from old configs.
 - **Out-of-world recovery** is performed when that NPC next receives an AI update. `/npc home` is manual.
 - `/npc summon` is an **admin action**, not the vanilla town NPC arrival algorithm. It checks world progression, rescued-NPC flags, and purchased pet licenses where available, but it does **not** check every normal arrival condition such as money, inventory, housing, or some NPC-specific rules. The Truffle, Princess and Zoologist conditions are intentionally approximate; town slimes and other special-case NPCs are omitted. Do not use this command if you want strict vanilla progression.
 

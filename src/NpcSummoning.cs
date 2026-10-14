@@ -9,7 +9,8 @@ internal static class NpcSummoning
 {
     // Administrative eligibility, intentionally conservative for rescued NPCs.
     // This is not Terraria's complete automatic housing/spawn algorithm.
-    // Avoid summoning pets, Truffle, Princess, etc. without their extra checks.
+    // Bought-pet flags are checked; Princess/Truffle/Zoologist rules are
+    // approximations. Housing and inventory prerequisites are not validated.
     private static readonly Dictionary<int, Func<bool>> Candidates = new()
     {
         [NPCID.Guide] = () => true,
@@ -27,12 +28,18 @@ internal static class NpcSummoning
         [NPCID.PartyGirl] = () => CountTownNpcs() >= 14,
         [NPCID.Wizard] = () => NPC.savedWizard,
         [NPCID.TaxCollector] = () => NPC.savedTaxCollector,
+        [NPCID.Truffle] = () => Main.hardMode,
         [NPCID.Pirate] = () => NPC.downedPirates,
         [NPCID.Steampunker] = () => NPC.downedMechBossAny,
         [NPCID.Cyborg] = () => NPC.downedPlantBoss,
         [NPCID.Angler] = () => NPC.savedAngler,
         [NPCID.Stylist] = () => NPC.savedStylist,
         [NPCID.Golfer] = () => NPC.savedGolfer,
+        [NPCID.BestiaryGirl] = () => true,
+        [NPCID.Princess] = () => CountTownNpcs() >= 24,
+        [NPCID.TownCat] = () => NPC.boughtCat,
+        [NPCID.TownDog] = () => NPC.boughtDog,
+        [NPCID.TownBunny] = () => NPC.boughtBunny,
         [NPCID.DD2Bartender] = () => NPC.savedBartender,
         [NPCID.SantaClaus] = () => NPC.downedFrost && Main.xMas,
     };

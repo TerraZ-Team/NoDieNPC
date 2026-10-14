@@ -34,7 +34,7 @@ Generated at `tshock/NoDieNPC.json`:
 - **Freeze** cancels town NPC AI in `NpcAIUpdate` and stops velocity without modifying `aiStyle`. Shimmer-transparent NPCs are left alone to finish their transformation.
 - **GodMode** uses `NpcStrike`, `NpcSpawn`, `NpcAIUpdate` and initial world reconciliation. Original immunity/damage settings are restored when it is disabled and when the plugin unloads.
 - **Out-of-world recovery** is performed when that NPC next receives an AI update. `/npc home` is manual.
-- `/npc summon` is an **admin action**, not the vanilla town NPC arrival algorithm. It checks world progression and rescue flags for listed NPCs, but it does **not** check every normal arrival condition such as money, inventory, housing, or some NPC-specific rules. Pets/Princess/Truffle and other special-case NPCs are intentionally omitted. Do not use this command if you want strict vanilla progression.
+- `/npc summon` is an **admin action**, not the vanilla town NPC arrival algorithm. It checks world progression, rescued-NPC flags, and purchased pet licenses where available, but it does **not** check every normal arrival condition such as money, inventory, housing, or some NPC-specific rules. The Truffle, Princess and Zoologist conditions are intentionally approximate; town slimes and other special-case NPCs are omitted. Do not use this command if you want strict vanilla progression.
 
 ## Building
 

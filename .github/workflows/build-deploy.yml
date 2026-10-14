@@ -1,0 +1,97 @@
+name: Build and deploy plugin
+
+on:
+  push:
+    tags: ["*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Build plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          project="src/NoDieNPC.csproj"
+          publish="$RUNNER_TEMP/NoDieNPC-publish"
+          artifact="$RUNNER_TEMP/NoDieNPC-artifact"
+          mkdir -p "$artifact"
+          dotnet restore "$project"
+          dotnet build "$project" -c Release --no-restore
+          dotnet publish "$project" -c Release --no-build --output "$publish"
+          test -s "$publish/NoDieNPC.dll"
+          cp "$publish/NoDieNPC.dll" "$artifact/NoDieNPC.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: NoDieNPC
+          path: ${{ runner.temp }}/NoDieNPC-artifact/NoDieNPC.dll
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, windows, x64]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: NoDieNPC
+          path: ${{ runner.temp }}\NoDieNPC-artifact
+
+      - name: Deploy plugin
+        shell: pwsh
+        env:
+          DEPLOY_DIR: ${{ vars.PLUGIN_DEPLOY_DIR }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $deployDir = $env:DEPLOY_DIR
+          if ([string]::IsNullOrWhiteSpace($deployDir)) {
+            $deployDir = "C:\github-deploy"
+            Write-Host "PLUGIN_DEPLOY_DIR is not set. Using default: $deployDir"
+          }
+
+          $source = Join-Path $env:RUNNER_TEMP "NoDieNPC-artifact\NoDieNPC.dll"
+          if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "Plugin DLL was not downloaded: $source"
+          }
+          New-Item -ItemType Directory -Path $deployDir -Force | Out-Null
+          $destination = Join-Path $deployDir "NoDieNPC.dll"
+
+          if (-not (Test-Path -LiteralPath $destination)) {
+            Copy-Item -LiteralPath $source -Destination $destination
+          } else {
+            # Match the other TerraZ-Team deployment workflows:
+            # write in place because a running server may keep the DLL open.
+            $bytes = [System.IO.File]::ReadAllBytes($source)
+            $stream = [System.IO.File]::Open(
+              $destination,
+              [System.IO.FileMode]::Open,
+              [System.IO.FileAccess]::Write,
+              [System.IO.FileShare]::Read)
+            try {
+              $stream.SetLength(0)
+              $stream.Write($bytes, 0, $bytes.Length)
+              $stream.Flush($true)
+            } finally {
+              $stream.Dispose()
+            }
+          }
+          Write-Host "Deployed: $destination"

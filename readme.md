@@ -45,4 +45,21 @@ dotnet build src/NoDieNPC.csproj -c Release --no-restore
 
 Copy the resulting `NoDieNPC.dll` into the TShock `ServerPlugins` directory. Requires a compatible version of `TShockAPI.TZ` and .NET 9.
 
+## Continuous integration and deployment
+
+- `.github/workflows/build.yml` checks the .NET 9 build on branch pushes and pull requests.
+- `.github/workflows/build-deploy.yml` runs on **any pushed Git tag** or by **workflow_dispatch** in GitHub Actions.
+- The deploy workflow builds `NoDieNPC.dll` on Ubuntu, uploads a workflow artifact (kept 14 days), and deploys **only that DLL** using a `[self-hosted, windows, x64]` runner.
+- Destination is the GitHub Actions repository variable `PLUGIN_DEPLOY_DIR`; if unset, the Windows runner uses `C:\github-deploy`, consistent with other TerraZ-Team plugins.
+- Deployment copies the DLL into the configured directory. It **does not restart TShock**, install the DLL into another server path, or create a GitHub Release. The Windows self-hosted runner must be online and have write access to the directory.
+
+To deploy from a version tag after merging the workflow:
+
+```sh
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+Alternatively, run **Build and deploy plugin** with **Run workflow** on the Actions tab.
+
 See [manual verification scenarios](docs/testing.md) before deploying to a live world.

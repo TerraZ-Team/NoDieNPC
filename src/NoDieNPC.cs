@@ -10,7 +10,7 @@ namespace NoDieNPC;
 public sealed class NoDieNPC : TerrariaPlugin
 {
     public override string Name => "NoDieNPC";
-    public override Version Version => new(1, 1, 0);
+    public override Version Version => new(1, 1, 1);
     public override string Author => "iBelarus; TerraZ-Team contributors";
     public override string Description => "Event-driven town NPC protection and administration.";
 
@@ -85,13 +85,22 @@ public sealed class NoDieNPC : TerrariaPlugin
         // must continue running their original AI.
         if (_config.Freeze && !npc.CurrentlyShimmerTransparent())
         {
-            if (npc.velocity != Vector2.Zero)
-            {
-                npc.velocity = Vector2.Zero;
-                npc.netUpdate = true;
-            }
+            FreezeHorizontalMovement(npc);
             args.Handled = true;
         }
+    }
+
+    private static void FreezeHorizontalMovement(NPC npc)
+    {
+        // NPC.AI runs before physics. Resetting the Y velocity here prevents
+        // gravity from accumulating, making NPCs float down pixel by pixel.
+        // It also forces an NPC sync packet on every tick while falling.
+        // Freeze AI and horizontal motion, but let vanilla physics land the NPC.
+        if (npc.velocity.X == 0f)
+            return;
+
+        npc.velocity = new Vector2(0f, npc.velocity.Y);
+        npc.netUpdate = true;
     }
 
     private void ReconcileProtection(NPC npc)
@@ -167,13 +176,7 @@ public sealed class NoDieNPC : TerrariaPlugin
 
             ReconcileProtection(npc);
             if (npc.townNPC && _config.Freeze && !npc.CurrentlyShimmerTransparent())
-            {
-                if (npc.velocity != Vector2.Zero)
-                {
-                    npc.velocity = Vector2.Zero;
-                    npc.netUpdate = true;
-                }
-            }
+                FreezeHorizontalMovement(npc);
         }
     }
 

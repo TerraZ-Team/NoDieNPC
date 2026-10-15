@@ -10,7 +10,7 @@ namespace NoDieNPC;
 public sealed class NoDieNPC : TerrariaPlugin
 {
     public override string Name => "NoDieNPC";
-    public override Version Version => new(1, 1, 0);
+    public override Version Version => new(1, 1, 1);
     public override string Author => "iBelarus; TerraZ-Team contributors";
     public override string Description => "Event-driven town NPC protection and administration.";
 
